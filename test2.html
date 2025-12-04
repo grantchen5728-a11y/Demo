@@ -1,11 +1,64 @@
 <!DOCTYPE html>
-<html>
-<style>
-table, th, td {
-  border:1px solid black;
-}
-</style>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <title>Demo — Student Form and Table</title>
+  <style>
+    table, th, td {
+      border:1px solid black;
+    }
+    form {
+      margin-bottom: 1rem;
+      max-width: 420px;
+    }
+    fieldset {
+      border: 1px solid #ccc;
+      padding: 0.75rem;
+    }
+    legend {
+      font-weight: bold;
+    }
+    label {
+      display: block;
+      margin: 0.25rem 0 0.125rem;
+    }
+    .form-row {
+      margin-bottom: 0.5rem;
+    }
+    #saved-student {
+      margin: 0.5rem 0 1rem;
+      font-style: italic;
+    }
+  </style>
+</head>
 <body>
+
+<h2>Student Information</h2>
+
+<form id="student-form" aria-labelledby="student-form-heading" novalidate>
+  <fieldset>
+    <legend id="student-form-heading">Enter student details</legend>
+
+    <div class="form-row">
+      <label for="student-name">Student name</label>
+      <input type="text" id="student-name" name="student_name" required />
+    </div>
+
+    <div class="form-row">
+      <label for="student-id">Student ID</label>
+      <input type="text" id="student-id" name="student_id" inputmode="numeric" pattern="\d*" required />
+    </div>
+
+    <div class="form-row">
+      <label for="student-birthday">Birthday</label>
+      <input type="date" id="student-birthday" name="student_birthday" required />
+    </div>
+
+    <button type="submit">Save</button>
+  </fieldset>
+</form>
+
+<div id="saved-student" aria-live="polite"></div>
 
 <h2>A basic HTML table</h2>
 
@@ -29,7 +82,51 @@ table, th, td {
 
 <p>To understand the example better, we have added borders to the table.</p>
 
+<script>
+  // When the form is submitted, show the saved student info in an alert and update the visible status.
+  (function () {
+    const form = document.getElementById('student-form');
+    const out = document.getElementById('saved-student');
+
+    form.addEventListener('submit', function (e) {
+      e.preventDefault();
+
+      const name = document.getElementById('student-name').value.trim();
+      const id = document.getElementById('student-id').value.trim();
+      const birthday = document.getElementById('student-birthday').value;
+
+      if (!name || !id || !birthday) {
+        const msg = 'Please fill in all fields.';
+        // Update visible status for screen readers and show an alert
+        out.textContent = msg;
+        alert(msg);
+        return;
+      }
+
+      // Format date (YYYY-MM-DD) into a more readable form if available
+      let birthdayText = birthday;
+      try {
+        const d = new Date(birthday);
+        if (!isNaN(d)) {
+          birthdayText = d.toLocaleDateString();
+        }
+      } catch (err) {
+        // leave birthdayText as-is
+      }
+
+      const message = `Saved: ${name} (ID: ${id}), Birthday: ${birthdayText}`;
+
+      // Show the result in an alert as requested
+      alert(message);
+
+      // Also update the on-page status for accessibility
+      out.textContent = message;
+
+      form.reset();
+      document.getElementById('student-name').focus();
+    });
+  })();
+</script>
+
 </body>
 </html>
-
-
