@@ -2,85 +2,83 @@
 <html lang="en">
 <head>
   <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>Demo — Student Form and Table</title>
+
+  <!-- Bootstrap CSS (CDN) -->
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+
   <style>
-    table, th, td {
-      border:1px solid black;
-    }
-    form {
-      margin-bottom: 1rem;
-      max-width: 420px;
-    }
-    fieldset {
-      border: 1px solid #ccc;
-      padding: 0.75rem;
-    }
-    legend {
-      font-weight: bold;
-    }
-    label {
-      display: block;
-      margin: 0.25rem 0 0.125rem;
-    }
-    .form-row {
-      margin-bottom: 0.5rem;
-    }
-    #saved-student {
-      margin: 0.5rem 0 1rem;
-      font-style: italic;
-    }
+    /* keep a minimal amount of custom styling */
+    fieldset { border: 1px solid #dee2e6; padding: 1rem; }
+    legend { font-weight: 600; }
+    #saved-student { margin-top: 0.5rem; font-style: italic; }
   </style>
 </head>
 <body>
 
-<h2>Student Information</h2>
+<div class="container my-4">
+  <h1 class="mb-4">Student Information</h1>
 
-<form id="student-form" aria-labelledby="student-form-heading" novalidate>
-  <fieldset>
-    <legend id="student-form-heading">Enter student details</legend>
+  <div class="row">
+    <div class="col-lg-6">
+      <form id="student-form" aria-labelledby="student-form-heading" novalidate>
+        <fieldset>
+          <legend id="student-form-heading">Enter student details</legend>
 
-    <div class="form-row">
-      <label for="student-name">Student name</label>
-      <input type="text" id="student-name" name="student_name" required />
+          <div class="mb-3">
+            <label for="student-name" class="form-label">Student name</label>
+            <input type="text" class="form-control" id="student-name" name="student_name" required />
+          </div>
+
+          <div class="mb-3">
+            <label for="student-id" class="form-label">Student ID</label>
+            <input type="text" class="form-control" id="student-id" name="student_id" inputmode="numeric" pattern="\d*" required />
+          </div>
+
+          <div class="mb-3">
+            <label for="student-birthday" class="form-label">Birthday</label>
+            <input type="date" class="form-control" id="student-birthday" name="student_birthday" required />
+          </div>
+
+          <button type="submit" class="btn btn-primary">Save</button>
+        </fieldset>
+      </form>
+
+      <div id="saved-student" class="text-muted" aria-live="polite"></div>
     </div>
 
-    <div class="form-row">
-      <label for="student-id">Student ID</label>
-      <input type="text" id="student-id" name="student_id" inputmode="numeric" pattern="\d*" required />
+    <div class="col-lg-6">
+      <h2 class="h5">A basic HTML table</h2>
+      <table class="table table-bordered w-100">
+        <thead>
+          <tr>
+            <th>Company</th>
+            <th>Contact</th>
+            <th>Country</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>Alfreds Futterkiste</td>
+            <td>Maria Anders</td>
+            <td>Germany</td>
+          </tr>
+          <tr>
+            <td>Centro comercial Moctezuma</td>
+            <td>Francisco Chang</td>
+            <td>Mexico</td>
+          </tr>
+        </tbody>
+      </table>
+
+      <p class="small text-muted">To understand the example better, we have added borders to the table.</p>
     </div>
+  </div>
+</div>
 
-    <div class="form-row">
-      <label for="student-birthday">Birthday</label>
-      <input type="date" id="student-birthday" name="student_birthday" required />
-    </div>
-
-    <button type="submit">Save</button>
-  </fieldset>
-</form>
-
-<div id="saved-student" aria-live="polite"></div>
-
-<h2>A basic HTML table</h2>
-
-<table style="width:100%">
-  <tr>
-    <th>Company</th>
-    <th>Contact</th>
-    <th>Country</th>
-  </tr>
-  <tr>
-    <td>Alfreds Futterkiste</td>
-    <td>Maria Anders</td>
-    <td>Germany</td>
-  </tr>
-  <tr>
-    <td>Centro comercial Moctezuma</td>
-    <td>Francisco Chang</td>
-    <td>Mexico</td>
-  </tr>
-</table>
-
-<p>To understand the example better, we have added borders to the table.</p>
+<!-- Bootstrap JS Bundle (includes Popper) -->
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
 
 <script>
   // When the form is submitted, show the saved student info in an alert and update the visible status.
@@ -97,7 +95,6 @@
 
       if (!name || !id || !birthday) {
         const msg = 'Please fill in all fields.';
-        // Update visible status for screen readers and show an alert
         out.textContent = msg;
         alert(msg);
         return;
