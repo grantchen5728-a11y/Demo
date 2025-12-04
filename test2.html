@@ -13,6 +13,7 @@
     fieldset { border: 1px solid #dee2e6; padding: 1rem; }
     legend { font-weight: 600; }
     #saved-student { margin-top: 0.5rem; font-style: italic; }
+    .controls-row { gap: 0.5rem; align-items: center; }
   </style>
 </head>
 <body>
@@ -49,80 +50,299 @@
     </div>
 
     <div class="col-lg-6">
-      <h2 class="h5">A basic HTML table</h2>
-      <table class="table table-bordered w-100">
+      <div class="d-flex justify-content-between align-items-center mb-2">
+        <h2 class="h5 mb-0">Students</h2>
+        <div class="d-flex controls-row">
+          <button id="load-students" class="btn btn-outline-secondary btn-sm" type="button" title="Load all saved students into the table">Load all students</button>
+          <button id="export-csv" class="btn btn-outline-success btn-sm" type="button" title="Download students as CSV">Export CSV</button>
+          <label class="btn btn-outline-primary btn-sm mb-0" for="upload-csv">Import CSV</label>
+          <input id="upload-csv" type="file" accept=".csv,text/csv" style="display:none" />
+        </div>
+      </div>
+
+      <table id="students-table" class="table table-bordered w-100">
         <thead>
           <tr>
-            <th>Company</th>
-            <th>Contact</th>
-            <th>Country</th>
+            <th>Student name</th>
+            <th>Student ID</th>
+            <th>Birthday</th>
           </tr>
         </thead>
-        <tbody>
-          <tr>
-            <td>Alfreds Futterkiste</td>
-            <td>Maria Anders</td>
-            <td>Germany</td>
-          </tr>
-          <tr>
-            <td>Centro comercial Moctezuma</td>
-            <td>Francisco Chang</td>
-            <td>Mexico</td>
-          </tr>
+        <tbody id="students-tbody">
+          <!-- rows inserted here -->
         </tbody>
       </table>
 
-      <p class="small text-muted">To understand the example better, we have added borders to the table.</p>
+      <p class="small text-muted">Use "Save" to add students, "Export CSV" to download, and "Import CSV" to load from a file.</p>
     </div>
   </div>
+
+  <!-- Optional: keep the original companies example below if you want -->
+  <hr />
+  <h2 class="h6">Company example (unchanged)</h2>
+  <table class="table table-bordered w-100">
+    <thead>
+      <tr>
+        <th>Company</th>
+        <th>Contact</th>
+        <th>Country</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td>Alfreds Futterkiste</td>
+        <td>Maria Anders</td>
+        <td>Germany</td>
+      </tr>
+      <tr>
+        <td>Centro comercial Moctezuma</td>
+        <td>Francisco Chang</td>
+        <td>Mexico</td>
+      </tr>
+    </tbody>
+  </table>
 </div>
 
 <!-- Bootstrap JS Bundle (includes Popper) -->
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
 
 <script>
-  // When the form is submitted, show the saved student info in an alert and update the visible status.
-  (function () {
-    const form = document.getElementById('student-form');
-    const out = document.getElementById('saved-student');
+(function () {
+  const STORAGE_KEY = 'students';
+  const form = document.getElementById('student-form');
+  const out = document.getElementById('saved-student');
+  const tbody = document.getElementById('students-tbody');
+  const loadBtn = document.getElementById('load-students');
+  const exportBtn = document.getElementById('export-csv');
+  const uploadInput = document.getElementById('upload-csv');
 
-    form.addEventListener('submit', function (e) {
-      e.preventDefault();
+  function getStudents() {
+    try {
+      const raw = localStorage.getItem(STORAGE_KEY);
+      return raw ? JSON.parse(raw) : [];
+    } catch (e) {
+      console.error('Failed to read students from storage', e);
+      return [];
+    }
+  }
 
-      const name = document.getElementById('student-name').value.trim();
-      const id = document.getElementById('student-id').value.trim();
-      const birthday = document.getElementById('student-birthday').value;
+  function saveStudents(list) {
+    try {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(list || []));
+    } catch (e) {
+      console.error('Failed to save students to storage', e);
+    }
+  }
 
-      if (!name || !id || !birthday) {
-        const msg = 'Please fill in all fields.';
-        out.textContent = msg;
-        alert(msg);
-        return;
-      }
+  function formatDateForDisplay(iso) {
+    try {
+      const d = new Date(iso);
+      if (!isNaN(d)) return d.toLocaleDateString();
+    } catch (e) {}
+    return iso;
+  }
 
-      // Format date (YYYY-MM-DD) into a more readable form if available
-      let birthdayText = birthday;
-      try {
-        const d = new Date(birthday);
-        if (!isNaN(d)) {
-          birthdayText = d.toLocaleDateString();
-        }
-      } catch (err) {
-        // leave birthdayText as-is
-      }
-
-      const message = `Saved: ${name} (ID: ${id}), Birthday: ${birthdayText}`;
-
-      // Show the result in an alert as requested
-      alert(message);
-
-      // Also update the on-page status for accessibility
-      out.textContent = message;
-
-      form.reset();
-      document.getElementById('student-name').focus();
+  function populateTable() {
+    const students = getStudents();
+    tbody.innerHTML = '';
+    if (!students.length) {
+      const tr = document.createElement('tr');
+      const td = document.createElement('td');
+      td.setAttribute('colspan', '3');
+      td.className = 'text-center text-muted';
+      td.textContent = 'No students saved';
+      tr.appendChild(td);
+      tbody.appendChild(tr);
+      return;
+    }
+    students.forEach(s => {
+      const tr = document.createElement('tr');
+      const tdName = document.createElement('td');
+      tdName.textContent = s.name || '';
+      const tdId = document.createElement('td');
+      tdId.textContent = s.id || '';
+      const tdBirthday = document.createElement('td');
+      tdBirthday.textContent = s.birthday ? formatDateForDisplay(s.birthday) : '';
+      tr.appendChild(tdName);
+      tr.appendChild(tdId);
+      tr.appendChild(tdBirthday);
+      tbody.appendChild(tr);
     });
-  })();
+  }
+
+  function toCSV(rows) {
+    // rows: array of objects {name,id,birthday}
+    const header = ['Student name', 'Student ID', 'Birthday'];
+    const lines = [header.join(',')];
+    rows.forEach(r => {
+      // escape quotes and wrap fields containing comma/quote/newline in quotes
+      const safe = v => {
+        if (v == null) return '';
+        const s = String(v);
+        if (/[,"\n]/.test(s)) {
+          return '"' + s.replace(/"/g, '""') + '"';
+        }
+        return s;
+      };
+      lines.push([safe(r.name), safe(r.id), safe(r.birthday)].join(','));
+    });
+    return lines.join('\r\n');
+  }
+
+  function downloadCSV(filename = 'students.csv') {
+    const students = getStudents();
+    const csv = toCSV(students);
+    const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = filename;
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    URL.revokeObjectURL(url);
+  }
+
+  function parseCSV(text) {
+    // simple CSV parser that handles quoted fields (commas/newlines inside quotes)
+    // returns array of arrays (rows)
+    const rows = [];
+    let cur = [];
+    let field = '';
+    let inQuotes = false;
+    for (let i = 0; i < text.length; i++) {
+      const ch = text[i];
+      const next = text[i + 1];
+      if (inQuotes) {
+        if (ch === '"' && next === '"') {
+          field += '"';
+          i++; // skip escaped quote
+        } else if (ch === '"') {
+          inQuotes = false;
+        } else {
+          field += ch;
+        }
+      } else {
+        if (ch === '"') {
+          inQuotes = true;
+        } else if (ch === ',') {
+          cur.push(field);
+          field = '';
+        } else if (ch === '\r') {
+          continue;
+        } else if (ch === '\n') {
+          cur.push(field);
+          rows.push(cur);
+          cur = [];
+          field = '';
+        } else {
+          field += ch;
+        }
+      }
+    }
+    // last field
+    if (field !== '' || inQuotes || cur.length) {
+      cur.push(field);
+      rows.push(cur);
+    }
+    return rows;
+  }
+
+  function importCSVText(text) {
+    const rows = parseCSV(text);
+    if (!rows.length) return { added: 0, errors: ['empty CSV'] };
+
+    // try to detect header row (case-insensitive)
+    const header = rows[0].map(h => (h || '').trim().toLowerCase());
+    const nameIndex = header.indexOf('student name') >= 0 ? header.indexOf('student name') : header.indexOf('name');
+    const idIndex = header.indexOf('student id') >= 0 ? header.indexOf('student id') : header.indexOf('id');
+    const birthdayIndex = header.indexOf('birthday');
+
+    let start = 1;
+    if (nameIndex === -1 && idIndex === -1 && birthdayIndex === -1) {
+      // no header detected, treat all rows as data
+      start = 0;
+    }
+
+    const existing = getStudents();
+    let added = 0;
+    for (let i = start; i < rows.length; i++) {
+      const r = rows[i];
+      // flexible mapping: use positions if no header mapped
+      const name = (nameIndex >= 0 ? r[nameIndex] : r[0]) || '';
+      const id = (idIndex >= 0 ? r[idIndex] : r[1]) || '';
+      const birthday = (birthdayIndex >= 0 ? r[birthdayIndex] : r[2]) || '';
+      if (!name && !id && !birthday) continue; // skip empty rows
+      existing.push({ name: name.trim(), id: id.trim(), birthday: birthday.trim() });
+      added++;
+    }
+    saveStudents(existing);
+    populateTable();
+    return { added };
+  }
+
+  form.addEventListener('submit', function (e) {
+    e.preventDefault();
+
+    const name = document.getElementById('student-name').value.trim();
+    const id = document.getElementById('student-id').value.trim();
+    const birthday = document.getElementById('student-birthday').value;
+
+    if (!name || !id || !birthday) {
+      const msg = 'Please fill in all fields.';
+      out.textContent = msg;
+      alert(msg);
+      return;
+    }
+
+    const students = getStudents();
+    students.push({ name, id, birthday });
+    saveStudents(students);
+
+    const message = `Saved: ${name} (ID: ${id}), Birthday: ${formatDateForDisplay(birthday)}`;
+    alert(message);
+    out.textContent = message;
+
+    form.reset();
+    document.getElementById('student-name').focus();
+    populateTable();
+  });
+
+  loadBtn.addEventListener('click', function () {
+    populateTable();
+    const count = getStudents().length;
+    out.textContent = `Loaded ${count} student(s) into the table.`;
+  });
+
+  exportBtn.addEventListener('click', function () {
+    downloadCSV();
+    out.textContent = 'CSV export started.';
+  });
+
+  uploadInput.addEventListener('change', function (e) {
+    const file = e.target.files && e.target.files[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = function (ev) {
+      try {
+        const text = ev.target.result;
+        const res = importCSVText(text);
+        alert(`${res.added} student(s) imported from CSV.`);
+        out.textContent = `${res.added} student(s) imported.`;
+      } catch (err) {
+        console.error(err);
+        alert('Failed to import CSV: ' + err.message);
+        out.textContent = 'Import failed.';
+      } finally {
+        uploadInput.value = ''; // reset input so same file can be uploaded again
+      }
+    };
+    reader.readAsText(file);
+  });
+
+  // populate table on load
+  populateTable();
+})();
 </script>
 
 </body>
